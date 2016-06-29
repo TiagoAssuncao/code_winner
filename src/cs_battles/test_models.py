@@ -12,4 +12,7 @@ def test_battle_creation():
     b = BattleFactory.create()
     assert b != None
 
-
+@pytest.mark.django_db
+def test_battle():
+    b = BattleResponseFactory.create()
+    assert b != None

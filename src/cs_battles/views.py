@@ -3,14 +3,14 @@ from django.http import Http404,HttpResponse
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from cs_questions.models import Question, CodingIoResponse
+from cs_questions.models.coding_io import CodingIoQuestion
 from cs_core.models import ProgrammingLanguage
 from .models import BattleResponse, Battle
 from datetime import datetime
 from viewpack import CRUDViewPack
 from django.views.generic.edit import ModelFormMixin
 
-from .forms import  BattleForm
+#from .forms import  BattleForm
 
 def battle(request,battle_pk):
     if request.method == "POST":
@@ -75,16 +75,12 @@ def battle_invitation(request):
     return method_return
 
 def create_battle_response(battle,user):
-    battle_response = battle.battles.filter(user_id=user.id)
-    if not battle_response:
-        battle_response = BattleResponse.objects.create(
-            user=user,
-            language=battle.language,
-            source="",
-            time_begin=timezone.now(),
-            time_end=timezone.now(),
-            battle=battle,
-        )
+
+    response = battle.question.get_response(user=user)
+    battle_response = BattleResponse.objects.get_or_create(
+        response=response,
+        battle=battle
+    )
     battle.invitations_user.remove(user)
 
 class BattleCRUDView(CRUDViewPack):

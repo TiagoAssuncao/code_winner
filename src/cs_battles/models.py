@@ -1,10 +1,11 @@
-from django.db import models
-from django.contrib.auth import models as auth_model
-from django.core.urlresolvers import reverse
-from cs_questions.models import Question
+from codeschool import models as auth_model
 from cs_core.models import ProgrammingLanguage
-from cs_questions.models import CodingIoQuestion, CodingIoResponse
-
+from cs_questions.models import CodingIoQuestion, CodingIoResponseItem
+from cs_questions.models import Question
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
+from cs_core.models import Response
 class Battle(models.Model):
     """The model to associate many battles"""
     TYPE_BATTLES = ( ("length","length"),("time","time") )
@@ -13,7 +14,13 @@ class Battle(models.Model):
     battle_owner = models.ForeignKey(auth_model.User,related_name="battle_owner")
     battle_winner = models.OneToOneField('BattleResponse',blank=True,null=True,related_name="winner")
     question = models.ForeignKey(CodingIoQuestion,related_name="battle_question")
-    type = models.CharField(default="length",choices=TYPE_BATTLES,max_length=20)
+    type = models.CharField(
+                _('type'),
+                default="length",
+                choices=TYPE_BATTLES,
+                max_length=20,
+                help_text=_('Choose a battle type.')
+            )
     language = models.ForeignKey(ProgrammingLanguage, related_name="battle_language")
     short_description = property(lambda x: x.question.short_description)
     long_description = property(lambda x: x.question.long_description)
@@ -46,12 +53,27 @@ class Battle(models.Model):
             return "(%s) %s" % (self.id,self.short_description)
 
 
-class BattleResponse(CodingIoResponse):
-    """BattleResponse class with attributes necessary to one participation for one challenger"""
 
-    time_begin = models.DateTimeField()
-    time_end = models.DateTimeField()
+class BattleResponse(models.Model):
+    """
+    BattleResponse class with attributes necessary to one participation for one
+    challenger
+    """
+
+    class Meta:
+        unique_together = [('response', 'battle')]
+
+    response = models.OneToOneField(Response)
+    time_begin = models.DateTimeField(auto_now_add=True)
+    time_end = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
     battle = models.ForeignKey(Battle,related_name='battles')
+    
+    def update(self, response_item):
+        self.time_end = response_item.created
+        self.save()
 
     def __str__(self):
-        return "%s - BattleResponse - User:  %s" % (self.id,self.user)
+        return "BattleResponse - User:  %s" % self.user
