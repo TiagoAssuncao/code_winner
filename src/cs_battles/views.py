@@ -12,26 +12,33 @@ from django.views.generic.edit import ModelFormMixin
 
 #from .forms import  BattleForm
 
+MAXIMUM_POINT = 100
+
 def battle(request,battle_pk):
     if request.method == "POST":
         message = ""
-        form = BattleForm(request.POST)
-        if form.is_valid():
-            battle_code = request.POST.get("code")
-            time_now = datetime.now()
+        form = request.POST
+        if form:
+            # Obtain attributes from form
+            battle_code = form.get("code")
             battle = Battle.objects.get(id=battle_pk)
 
-            battle_response = battle.battles.filter(user_id=request.user.id).first()
-            battle_response.source = battle_code
-            print("AAAAA: ", battle_code)
-            battle_response.question = battle.question
-            battle_response.language=battle.language
-            battle_response.time_end = time_now
+            time_now = datetime.now()
+            battle_response = battle.battles.get(response__user_id=request.user.id)
 
-            battle_response.autograde()
-            battle_response.save()
-            battle_is_corret = battle_response.is_correct
-            if battle_is_corret:
+            
+            response_item = battle.question.register_response_item(
+                user=request.user,
+                language=battle.language,
+                source=battle_code,
+                context=battle.question.default_context,
+                )
+            response_item.autograde()
+            print(response_item)
+            battle_response.update(response_item)
+
+            battle_is_correct = (response_item.given_grade == MAXIMUM_POINT)
+            if battle_is_correct:
                 message = "Sua questão está certa"
             else:
                 message = "Está errada"
