@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from cs_questions.models.coding_io import CodingIoQuestion
-from cs_core.models import ProgrammingLanguage
+from cs_core.models import ProgrammingLanguage, ResponseContext
 from .models import BattleResponse, Battle
 from datetime import datetime
 from viewpack import CRUDViewPack
@@ -34,7 +34,6 @@ def battle(request,battle_pk):
                 context=battle.question.default_context,
                 )
             response_item.autograde()
-            print(response_item)
             battle_response.update(response_item)
 
             battle_is_correct = (response_item.given_grade == MAXIMUM_POINT)
@@ -53,7 +52,7 @@ def battle(request,battle_pk):
 # Define the battles of a user
 def battle_user(request):
     user = request.user
-    battles = BattleResponse.objects.filter(user_id=user.id)
+    battles = BattleResponse.objects.filter(response__user_id=user.id)
     context = {"battles": battles}
     return render(request, 'battles/battle_user.jinja2', context)
 
@@ -82,8 +81,10 @@ def battle_invitation(request):
     return method_return
 
 def create_battle_response(battle,user):
-
-    response = battle.question.get_response(user=user)
+    response = battle.question.get_response(
+                                user=user,
+                                context=battle.battle_context
+                                )
     battle_response = BattleResponse.objects.get_or_create(
         response=response,
         battle=battle
@@ -96,17 +97,26 @@ class BattleCRUDView(CRUDViewPack):
     template_basename = 'battles/'
     check_permissions = False
     raise_404_on_permission_error = False
-    exclude_fields = ['battle_owner','battle_winner' ]
+    exclude_fields = ['battle_owner','battle_winner','battle_context']
 
     class CreateMixin:
 
         def get_success_url(self):
             return reverse("cs_battles:battle",kwargs={'battle_pk': self.object.pk})
 
+        def create_context(self,battle):
+            last_pk = Battle.objects.last().pk+1
+            return ResponseContext.objects.get_or_create(
+                                activity=battle.question,
+                                name="battle_"+str(last_pk)
+                            )[0]
         def form_valid(self,form):
             self.object = form.save(commit=False)
             self.object.battle_owner = self.request.user
+            self.object.battle_context = self.create_context(self.object)
             self.object.save()
+            print("1"*188)
+            print(self.object.invitations_user.all())
             create_battle_response(self.object,self.request.user)
             return super(ModelFormMixin, self).form_valid(form)
 

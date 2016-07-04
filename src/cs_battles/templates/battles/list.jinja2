@@ -17,7 +17,11 @@
             <tbody>
             {% for battle in object_list  %}
                 <tr onclick="location.href='{{battle.pk}}'"  >
-                    <td>{% if battle.is_active or battle.is_active == None %}X{% else %}O{% endif %}</td>
+                    <td>{% if battle.is_active or battle.is_active == None %}
+                        <img src="{% static "cs_battles/deactive_icon.png" %}" />
+                        {% else %}
+                        <img src="{% static "cs_battles/active_icon.png" %}" />
+                        {% endif %}</td>
                     <td>{{battle.pk}}</td>
                     <td>{{battle.question}}</td>
                     <td>{{battle.short_description}}</td>

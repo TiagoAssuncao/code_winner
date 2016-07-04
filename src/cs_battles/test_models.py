@@ -89,8 +89,9 @@ def test_battle_creation():
     b = BattleFactory.create()
     assert b is not None
 
-"""@pytest.mark.django_db
+@pytest.mark.django_db
 def test_battle_response_creation():
     br = BattleResponseFactory.create()
     assert br is not None
-    """
+
+

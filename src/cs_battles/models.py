@@ -1,5 +1,5 @@
 from codeschool import models as auth_model
-from cs_core.models import ProgrammingLanguage
+from cs_core.models import ProgrammingLanguage,ResponseContext,ResponseItem
 from cs_questions.models import CodingIoQuestion, CodingIoResponseItem
 from cs_questions.models import Question
 from django.core.urlresolvers import reverse
@@ -49,9 +49,8 @@ class Battle(models.Model):
     short_description = property(lambda x: x.question.short_description)
 
     long_description = property(lambda x: x.question.long_description)
-    # TODO:
-    # Add a context to each battle, and use this to all battle reponses
     
+    battle_context = models.ForeignKey(ResponseContext)
     @property
     def is_active(self):
         return (self.battle_winner is None
@@ -101,10 +100,11 @@ class BattleResponse(models.Model):
         null=True,
     )
     battle = models.ForeignKey(Battle,related_name='battles')
-    # TODO:
-    # Add a reference to last response item valid
+ 
+    last_item = models.ForeignKey(ResponseItem,blank=True,null=True)
     def update(self, response_item):
         self.time_end = response_item.created
+        self.last_item = response_item
         self.save()
 
     def __str__(self):
