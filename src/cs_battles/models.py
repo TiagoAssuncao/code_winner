@@ -9,7 +9,7 @@ from cs_core.models import Response
 
 class Battle(models.Model):
     """The model to associate many battles"""
-    TYPE_BATTLES = ( 
+    TYPE_BATTLES = (
                     (_("length"),"length"),
                     (_("time"),"time")
                     )
@@ -66,7 +66,10 @@ class Battle(models.Model):
 
     def winner_length(self):
         def source_length(battle):
-            return len(battle.source)
+            if battle.response.items.last() is not None:
+                return len(battle.response.items.last().source)
+            else:
+                return -1
         return min(self.battles.all(), key=source_length)
 
     def winner_time(self):

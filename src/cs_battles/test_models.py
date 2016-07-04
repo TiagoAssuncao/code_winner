@@ -71,7 +71,8 @@ def battle_deactived():
 def test_determine_winner():
     battle = battle_deactived()
     winner = battle.determine_winner()
-    assert winner is battle.battle_owner
+    a = battle.battles.first()
+    assert winner == a
 
 @pytest.mark.django_db
 def test_not_active_battle():
