@@ -6,14 +6,33 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from cs_core.models import Response
+
 class Battle(models.Model):
     """The model to associate many battles"""
-    TYPE_BATTLES = ( ("length","length"),("time","time") )
+    TYPE_BATTLES = ( 
+                    (_("length"),"length"),
+                    (_("time"),"time")
+                    )
     date = models.DateField(auto_now_add=True)
+
     invitations_user = models.ManyToManyField(auth_model.User)
-    battle_owner = models.ForeignKey(auth_model.User,related_name="battle_owner")
-    battle_winner = models.OneToOneField('BattleResponse',blank=True,null=True,related_name="winner")
-    question = models.ForeignKey(CodingIoQuestion,related_name="battle_question")
+
+    battle_owner = models.ForeignKey(
+                auth_model.User,
+                related_name="battle_owner"
+            )
+
+    battle_winner = models.OneToOneField(
+                    'BattleResponse',
+                    blank=True,
+                    null=True,
+                    related_name="winner"
+                )
+
+    question = models.ForeignKey(
+                    CodingIoQuestion,
+                    related_name="battle_question"
+                )
 
     type = models.CharField(
                 _('type'),
@@ -22,15 +41,22 @@ class Battle(models.Model):
                 max_length=20,
                 help_text=_('Choose a battle type.')
             )
-    language = models.ForeignKey(ProgrammingLanguage, related_name="battle_language")
+    language = models.ForeignKey(
+                ProgrammingLanguage,
+                related_name="battle_language"
+            )
+ 
     short_description = property(lambda x: x.question.short_description)
+
     long_description = property(lambda x: x.question.long_description)
     # TODO:
     # Add a context to each battle, and use this to all battle reponses
+    
     @property
     def is_active(self):
-        return (self.battles.first() and not self.battle_winner
-            and not self.invitations_user.all())
+        return (self.battle_winner is None
+            and len(self.invitations_user.all()) is not 0
+            and self.battles.first() is None )
 
     def determine_winner(self):
         if self.is_active:

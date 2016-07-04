@@ -7,8 +7,8 @@ class BattleFactory(factory.DjangoModelFactory):
     class Meta:
         model = Battle
     battle_owner = factory.SubFactory(UserFactory)
-    question_id = factory.SubFactory(CodingIoQuestionFactory)
-    language_id = 'python'
+    question = factory.SubFactory(CodingIoQuestionFactory)
+    language_id = 1
     """name = factory.LazyAttribute(lambda x: fake.word())
     short_description = factory.LazyAttribute(lambda x: fake.sentence())
     long_description = factory.LazyAttribute(lambda x: fake.text())
@@ -18,9 +18,6 @@ class BattleFactory(factory.DjangoModelFactory):
 class BattleResponseFactory(factory.DjangoModelFactory):
     class Meta:
         model = BattleResponse
-    battle_id = 1
-    question = factory.SubFactory(CodingIoQuestionFactory)
-    user = factory.SubFactory(UserFactory)
-    language_id = 'python'
-    time_begin = timezone.now()
+    battle = factory.SubFactory(BattleFactory)
     time_end = timezone.now()
+    response = factory.LazyAttribute(lambda x: x.battle.question.get_response(user=factory.SubFactory(UserFactory)))
