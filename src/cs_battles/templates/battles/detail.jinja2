@@ -8,15 +8,13 @@
             </div>
         {% endif %}
         {% for battle_result in all_battles %}
-            <div id="{{battle_result.user.id}}">
-                User: {{ battle_result.user }} <br>
+            <div id="{{battle_result.response.user.id}}">
+                User: {{ battle_result.response.user }} <br>
                 Ranking position: "number" <br>
                 Time: {{ (battle_result.time_end - battle_result.time_begin)|deltaformat }} <br>
-                Characters count: {{ battle_result.source|length  }}<br>
-                <!--    Time execution code: "in seconds"<br>
-                Number of submitions: "a lot!"<br -->
+                Characters count: {{ battle_result.last_item.source|length  }}<br>
                 Code winner: 
-                <br><formated>{{ battle_result.source }} <formated><br>
+                <br><formated>{{ battle_result.last_item.source }} <formated><br>
             </div>
             <p>
         {% endfor %}
