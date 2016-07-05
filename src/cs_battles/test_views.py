@@ -1,8 +1,8 @@
 from codeschool.tests import *
-import pytest_selenium
-from cs_battles.test_models import battle_fixture
 from cs_battles.factories import BattleResponseFactory
 from cs_battles.models import *
+from cs_battles.test_models import battle_fixture,battle_without_winner
+from cs_questions.factories import CodingIoQuestionFactory
 
 @pytest.fixture
 def many_battles():
@@ -10,7 +10,7 @@ def many_battles():
     return battles
 
 @pytest.fixture
-def client_loged(client):
+def client_logged(client):
     user = user_with_password("1234")
     client.login(username=user.username,password='1234')
     return client,user
@@ -48,7 +48,7 @@ def test_battles_find(client):
 
 @pytest.mark.django_db
 def test_invitations_user(client):
-    client,user = client_loged(client)
+    client,user = client_logged(client)
     battles_invitation(user)   
     response = client.get('/battles/invitations')
     assert response.templates[0].name == "battles/invitation.jinja2"
@@ -58,7 +58,7 @@ def test_invitations_user(client):
 
 @pytest.mark.django_db
 def test_redirect_battle_response_get(client):
-    client,user= client_loged(client)
+    client,user= client_logged(client)
     response = client.get('/battles/battle/1')
     assert 200 <= response.status_code < 300
     assert response.templates[0].name == 'battles/battle.jinja2'
@@ -66,7 +66,7 @@ def test_redirect_battle_response_get(client):
 
 @pytest.mark.django_db
 def test_battle_submition_accept(client):
-    client,user = client_loged(client)
+    client,user = client_logged(client)
     battle_response = battle_response_iospec(user)
     response = client.post(
                     '/battles/battle/%d'%battle_response.battle.pk,
@@ -78,7 +78,7 @@ def test_battle_submition_accept(client):
 
 @pytest.mark.django_db
 def test_battle_submition_reject(client):
-    client,user = client_loged(client)
+    client,user = client_logged(client)
     battle_response = battle_response_iospec(user)
     response = client.post(
                     '/battles/battle/%d'%battle_response.battle.pk,
@@ -90,7 +90,7 @@ def test_battle_submition_reject(client):
 
 @pytest.mark.django_db
 def test_battles_of_user(client):
-    client,user = client_loged(client)
+    client,user = client_logged(client)
     battle_response_iospec(user)
     battle_response_iospec(user)
     response = client.get('/battles/user')
@@ -99,6 +99,76 @@ def test_battles_of_user(client):
     assert 'battles' in response.context
     assert len(response.context['battles']) == 2
     assert response.templates[0].name == 'battles/battle_user.jinja2'
+
+@pytest.mark.django_db
+def test_redirect_accept_challange(client):
+    client,user = client_logged(client)
+    battles_invitation(user)
+    response = client.post(
+                "/battles/accept",
+                {'battle_pk':1,'accept':True})
+
+    assert 300 <= response.status_code < 400
+    assert response.url == "/battles/battle/1"
+
+@pytest.mark.django_db
+def test_accept_challange(client):
+    client,user = client_logged(client)
+    battles_invitation(user)
+    response = client.post(
+                "/battles/accept",
+                {'battle_pk':1,'accept':True})
+    invitations = Battle.objects.get(pk=1).invitations_user.all() 
+    assert len(invitations) == 0
+
+@pytest.mark.django_db
+def test_reject_challange(client):
+    client,user = client_logged(client)
+    battles_invitation(user)
+    response = client.post(
+                "/battles/accept",
+                {'battle_pk':1,'reject':True})
+    invitations = Battle.objects.get(pk=1).invitations_user.all() 
+    assert len(invitations) == 0
+
+@pytest.mark.django_db
+def test_redirect_reject_challange(client):
+    client,user = client_logged(client)
+    battles_invitation(user)
+    response = client.post(
+                "/battles/accept",
+                {'battle_pk':1,'reject':True})
+    assert 300 <= response.status_code < 400
+    assert response.url == "/battles/invitations"
+
+@pytest.mark.django_db
+def test_detail_battle(client):
+    battle = battle_without_winner()
+    client,user = client_logged(client)
+    response = client.get('/battles/%d/'%battle.pk)
+
+    assert 200 <= response.status_code < 300
+    assert response.templates[0].name == "battles/detail.jinja2"
+    assert 'all_battles' in response.context
+    assert len(response.context['all_battles']) == 2
+    assert response.context['battle'].battle_winner is not None
+
+@pytest.mark.django_db
+def test_battle_creation(client):
+    client,user = client_logged(client)
+    question = CodingIoQuestionFactory.create()
+    invitation = user_with_password("1234")
+    response = client.post('/battles/new/',
+                           {'question':question.pk,
+                           'invitations_user':(invitation.pk),
+                           'challenge_type':'time',
+                           'language':20,
+                               })
+    assert 300 <= response.status_code < 400
+    battles = Battle.objects.all()
+    assert len(battles) == 1
+ #   assert len(battles[0].invitations_user.all()) != 0
+    assert response.url == "/battles/battle/1"
 
 """ 
 class _TestURLS(URLBaseTester):

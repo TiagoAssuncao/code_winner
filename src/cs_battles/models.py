@@ -53,8 +53,7 @@ class Battle(models.Model):
     battle_context = models.ForeignKey(ResponseContext)
     @property
     def is_active(self):
-        return (len(self.invitations_user.all()) is not 0
-                or self.battle_winner is None)
+        return (len(self.invitations_user.all()) is not 0)
 
     def __init__(self, *args, **kwargs):
         if 'language' in kwargs and isinstance(kwargs['language'], str):
@@ -62,7 +61,7 @@ class Battle(models.Model):
         super().__init__(*args, **kwargs)
     
     def determine_winner(self):
-        if self.is_active:
+        if not self.is_active and self.battle_winner is None:
             self.battle_winner = getattr(self,'winner_'+str(self.challenge_type))()
             self.save()
         return self.battle_winner

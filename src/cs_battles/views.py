@@ -105,17 +105,19 @@ class BattleCRUDView(CRUDViewPack):
             return reverse("cs_battles:battle",kwargs={'battle_pk': self.object.pk})
 
         def create_context(self,battle):
-            last_pk = Battle.objects.last().pk+1
+            last_pk = 1
+            if Battle.objects.last() is not None:
+                last_pk = Battle.objects.last().pk+1
             return ResponseContext.objects.get_or_create(
                                 activity=battle.question,
                                 name="battle_"+str(last_pk)
                             )[0]
         def form_valid(self,form):
             self.object = form.save(commit=False)
+            print("*"*100)
             self.object.battle_owner = self.request.user
             self.object.battle_context = self.create_context(self.object)
             self.object.save()
-            print("1"*188)
             print(self.object.invitations_user.all())
             create_battle_response(self.object,self.request.user)
             return super(ModelFormMixin, self).form_valid(form)
