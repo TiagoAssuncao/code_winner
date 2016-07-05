@@ -17,10 +17,10 @@ MAXIMUM_POINT = 100
 def battle(request,battle_pk):
     if request.method == "POST":
         message = ""
-        form = request.POST
-        if form:
-            # Obtain attributes from form
-            battle_code = form.get("code")
+        post = request.POST
+        if post:
+            # Obtain attributes from post
+            battle_code = post.get("code")
             battle = Battle.objects.get(id=battle_pk)
 
             time_now = datetime.now()
