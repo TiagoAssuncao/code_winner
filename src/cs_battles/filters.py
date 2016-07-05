@@ -15,7 +15,7 @@ def date_format(timezone_date,format="short"):
 def delta_time(delta_time):
     final_string = ""
     time_total = delta_time.days*DAY+delta_time.seconds
-    years,rest = divmod(delta_time.seconds,YEAR)
+    years,rest = divmod(time_total,YEAR)
     if( years ):
         final_string+= ("%d anos, "% years)
     days,rest = divmod(rest,DAY)
@@ -28,5 +28,3 @@ def delta_time(delta_time):
 def filters():
     jinja_filter['dateformat'] = date_format
     jinja_filter['deltaformat'] = delta_time
-
-

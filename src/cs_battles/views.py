@@ -31,7 +31,7 @@ def battle(request,battle_pk):
                 user=request.user,
                 language=battle.language,
                 source=battle_code,
-                context=battle.question.default_context,
+                context=battle.battle_context,
                 )
             response_item.autograde()
             battle_response.update(response_item)

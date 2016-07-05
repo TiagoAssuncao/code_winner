@@ -1,5 +1,5 @@
 from codeschool import models as auth_model
-from cs_core.models import ProgrammingLanguage,ResponseContext,ResponseItem
+from cs_core.models import ProgrammingLanguage,ResponseContext,ResponseItem,programming_language
 from cs_questions.models import CodingIoQuestion, CodingIoResponseItem
 from cs_questions.models import Question
 from django.core.urlresolvers import reverse
@@ -34,12 +34,12 @@ class Battle(models.Model):
                     related_name="battle_question"
                 )
 
-    type = models.CharField(
-                _('type'),
-                default="length",
+    challenge_type = models.CharField(
+                _('challenge_type'),
+                default=TYPE_BATTLES[0][0],
                 choices=TYPE_BATTLES,
                 max_length=20,
-                help_text=_('Choose a battle type.')
+                help_text=_('Choose a battle challenge type.')
             )
     language = models.ForeignKey(
                 ProgrammingLanguage,
@@ -53,41 +53,42 @@ class Battle(models.Model):
     battle_context = models.ForeignKey(ResponseContext)
     @property
     def is_active(self):
-        return (self.battle_winner is None
-            and len(self.invitations_user.all()) is not 0
-            and self.battles.first() is None )
+        return (len(self.invitations_user.all()) is not 0
+                or self.battle_winner is None)
 
+    def __init__(self, *args, **kwargs):
+        if 'language' in kwargs and isinstance(kwargs['language'], str):
+            kwargs['language'] = programming_language(kwargs['language'])
+        super().__init__(*args, **kwargs)
+    
     def determine_winner(self):
         if self.is_active:
-            self.battle_winner = getattr(self,'winner_'+self.type)()
+            self.battle_winner = getattr(self,'winner_'+str(self.challenge_type))()
             self.save()
         return self.battle_winner
 
     def winner_length(self):
         def source_length(battle):
-            if battle.response.items.last() is not None:
-                return len(battle.response.items.last().source)
+            if battle.last_item.source is not None:
+                return len(battle.last_item.source)
             else:
                 return -1
         return min(self.battles.all(), key=source_length)
 
     def winner_time(self):
         def source_time(battle):
-            return battle.time_end - battle.time_end
+            return battle.time_end - battle.time_begin
         return min(self.battles.all(),key=source_time)
 
     def __str__(self):
-        if self.battle_winner:
-            return "(%s) %s Winner: %s" % (self.id,self.short_description,self.battle_winner.user)
-        else:
-            return "(%s) %s" % (self.id,self.short_description)
+            return "Battle (%s): %s" % (self.id,self.short_description)
 
 
 
 class BattleResponse(models.Model):
     """
     BattleResponse class with attributes necessary to one participation for one
-    challenger
+    challenger.
     """
 
     class Meta:
@@ -108,4 +109,4 @@ class BattleResponse(models.Model):
         self.save()
 
     def __str__(self):
-        return "BattleResponse - User:  "
+        return "Battle responses - User: %s" % self.response.user
