@@ -163,11 +163,13 @@ def test_battle_creation(client):
                            'invitations_user':(invitation.pk),
                            'challenge_type':'time',
                            'language':20,
+                           'limit_submitions':10,
                                })
+    print(response.content)
     assert 300 <= response.status_code < 400
     battles = Battle.objects.all()
     assert len(battles) == 1
- #   assert len(battles[0].invitations_user.all()) != 0
+    assert len(battles[0].invitations_user.all()) != 0
     assert response.url == "/battles/battle/1"
 
 """ 

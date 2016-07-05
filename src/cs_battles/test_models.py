@@ -87,16 +87,10 @@ def battle_without_winner():
     battle_response2.update(ri)
 
     return battle
+
 @pytest.fixture
 def register_item(battle_response,source):
-    response_item = battle_response.response.activity. \
-        register_response_item(
-            source=source,
-            user=battle_response.response.user,
-            context=battle_response.battle.battle_context,
-            language=battle_response.battle.language,
-        )
-    response_item.autograde()
+    response_item = battle_response.submit_code(source)
     return response_item
 
 # Begin of tests
@@ -160,4 +154,26 @@ def test_update_response():
 def test_stringfy_battle_response():
     br = BattleResponseFactory.create()
     name_user = br.response.user
-    assert "Battle responses - User: %s" % name_user == str(br)
+    assert "Battle responses of user: %s" % name_user == str(br)
+
+@pytest.mark.django_db
+def test_battle_response_is_active():
+    battle_response = BattleResponseFactory.create()
+    register_item(battle_response,source_code())
+    assert battle_response.is_active
+    
+    battle_response.battle.limit_submitions = -1
+    battle_response.battle.save()
+    assert not battle_response.is_active
+
+    
+@pytest.mark.django_db
+def test_battle_response_cant_submit_code():
+    battle_response = BattleResponseFactory.create()
+    battle_response.battle.limit_submitions = 0
+    battle_response.battle.save()
+    try:
+        battle_response.submit_code(source_code()) 
+        assert False
+    except:
+        assert True

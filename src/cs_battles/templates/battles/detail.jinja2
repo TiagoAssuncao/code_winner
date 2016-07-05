@@ -4,17 +4,17 @@
     {% if not object.is_active %}
         {% if object.battle_winner %}
             <div>
-               <h2><a href="#{{object.id}}">Winner {{ object.battle_winner.user }} </a><br>
+               <h2><a href="/accounts/{{object.battle_winner.response.user.username}}">Winner {{ object.battle_winner.response.user }} </a><br>
             </div>
         {% endif %}
         {% for battle_result in all_battles %}
             <div id="{{battle_result.response.user.id}}">
                 User: {{ battle_result.response.user }} <br>
-                Ranking position: "number" <br>
                 Time: {{ (battle_result.time_end - battle_result.time_begin)|deltaformat }} <br>
                 Characters count: {{ battle_result.last_item.source|length  }}<br>
-                Code winner: 
-                <br><formated>{{ battle_result.last_item.source }} <formated><br>
+                Code winner:
+
+                <ace-editor id="editor" mode="{{object.language.ref}}">{{ battle_result.last_item.source }}</ace-editor >
             </div>
             <p>
         {% endfor %}

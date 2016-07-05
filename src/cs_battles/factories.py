@@ -17,6 +17,7 @@ class BattleFactory(factory.DjangoModelFactory):
                                             name=fake.word()
                                         )[0]
                     )
+    limit_submitions = 10
     """name = factory.LazyAttribute(lambda x: fake.word())
     short_description = factory.LazyAttribute(lambda x: fake.sentence())
     long_description = factory.LazyAttribute(lambda x: fake.text())

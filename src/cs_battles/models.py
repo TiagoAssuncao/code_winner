@@ -31,11 +31,12 @@ class Battle(models.Model):
 
     question = models.ForeignKey(
                     CodingIoQuestion,
-                    related_name="battle_question"
+                    related_name="battle_question",
+                    help_text=_('Select a created question for battle')
                 )
 
     challenge_type = models.CharField(
-                _('challenge_type'),
+                _('challenge type'),
                 default=TYPE_BATTLES[0][0],
                 choices=TYPE_BATTLES,
                 max_length=20,
@@ -43,7 +44,8 @@ class Battle(models.Model):
             )
     language = models.ForeignKey(
                 ProgrammingLanguage,
-                related_name="battle_language"
+                related_name="battle_language",
+                help_text=_('Select the language for battle')
             )
  
     short_description = property(lambda x: x.question.short_description)
@@ -51,6 +53,13 @@ class Battle(models.Model):
     long_description = property(lambda x: x.question.long_description)
     
     battle_context = models.ForeignKey(ResponseContext)
+    
+    limit_submitions = models.IntegerField(
+                _('limit submitions'),
+                default=10,
+                help_text=_('Define the maximun of submitions for each challenger')
+            )
+
     @property
     def is_active(self):
         return (len(self.invitations_user.all()) is not 0)
@@ -100,12 +109,46 @@ class BattleResponse(models.Model):
         null=True,
     )
     battle = models.ForeignKey(Battle,related_name='battles')
- 
-    last_item = models.ForeignKey(ResponseItem,blank=True,null=True)
+    
+    last_item = models.ForeignKey(
+        ResponseItem,
+        blank=True,
+        null=True
+    )
+    
+    @property
+    def submitions_count(self):
+        return len(self.response.items.all())
+
+    @property
+    def can_submit(self):
+        return self.battle.limit_submitions > self.submitions_count
+
+    @property
+    def is_active(self):
+        if self.last_item is not None:
+            return self.can_submit or self.last_item.given_grade == 100
+        else:
+            return self.can_submit
+
+    def submit_code(self,source_code):
+        if self.can_submit:
+            response_item = self.battle.question.register_response_item(
+                user=self.response.user,
+                language=self.battle.language,
+                source=source_code,
+                context=self.battle.battle_context,
+                )
+            response_item.autograde()
+            self.update(response_item)
+            return response_item
+        else:
+            raise Exception(_('Limit of submitions was reached'))
+
     def update(self, response_item):
         self.time_end = response_item.created
         self.last_item = response_item
         self.save()
 
     def __str__(self):
-        return "Battle responses - User: %s" % self.response.user
+        return "Battle responses of user: %s" % self.response.user

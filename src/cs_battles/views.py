@@ -22,32 +22,23 @@ def battle(request,battle_pk):
             # Obtain attributes from post
             battle_code = post.get("code")
             battle = Battle.objects.get(id=battle_pk)
-
-            time_now = datetime.now()
-            battle_response = battle.battles.get(response__user_id=request.user.id)
-
-            
-            response_item = battle.question.register_response_item(
-                user=request.user,
-                language=battle.language,
-                source=battle_code,
-                context=battle.battle_context,
-                )
-            response_item.autograde()
-            battle_response.update(response_item)
-
-            battle_is_correct = (response_item.given_grade == MAXIMUM_POINT)
-            if battle_is_correct:
-                message = "Sua questão está certa"
-            else:
-                message = "Está errada"
-
+            try:
+                battle_response = battle.battles \
+                                .get(response__user_id=request.user.id)
+                response_item = battle_response.submit_code(battle_code)
+                battle_is_correct = (response_item.given_grade == MAXIMUM_POINT)
+                if battle_is_correct:
+                    message = "Sua questão está certa"
+                else:
+                    message = "Está errada"
+            except Exception as e:
+                message = e.args[0]
         context = {
             'message':message,
         }
         return render(request, 'battles/result.jinja2', context)
     else:
-        return render(request, 'battles/battle.jinja2')
+        return render(request, 'battles/battle.jinja2',{'source_code':""})
 
 # Define the battles of a user
 def battle_user(request):
@@ -114,11 +105,10 @@ class BattleCRUDView(CRUDViewPack):
                             )[0]
         def form_valid(self,form):
             self.object = form.save(commit=False)
-            print("*"*100)
             self.object.battle_owner = self.request.user
             self.object.battle_context = self.create_context(self.object)
             self.object.save()
-            print(self.object.invitations_user.all())
+            form.save_m2m()
             create_battle_response(self.object,self.request.user)
             return super(ModelFormMixin, self).form_valid(form)
 
