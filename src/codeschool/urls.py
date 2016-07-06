@@ -28,7 +28,7 @@ urlpatterns = [
     url(r'^courses/', RedirectView.as_view(url='/unb-gama/')),
     # url(r'^questions/', include('cs_questions.urls')),
     # url(r'^polls/', include('cs_polls.urls')),
-    # url(r'^battles/', include('cs_battles.urls', namespace='battle')),
+    url(r'^battles/', include('cs_battles.urls', namespace='battle')),
     # url(r'^pbl/', include('cs_pbl.urls', namespace='pbl')),
     url(r'', include('wagtail.wagtailcore.urls')),
 

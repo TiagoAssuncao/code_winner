@@ -1,6 +1,16 @@
 {% extends "viewpack/crud/list-base.jinja2" %}
 {% block content_title %}{{ super() }}{% endblock %}
-
+{% block nav_sections %}
+    {{super()}}
+    <nav>
+    <p><a href="/battles/">Battles</a></p>
+    <ul>
+        <li><a href="/battles/new">New</a></li>
+        <li><a href="/battles/user">My</a></li>
+        <li><a href="/battles/invitations">Invitations</a></li>
+    </ul>
+    </nav>
+{% endblock %}
 {% block content_body %}
     {% block invitation %}
         <a href="invitations">Invitations</a>
@@ -17,11 +27,15 @@
             <tbody>
             {% for battle in object_list  %}
                 <tr onclick="location.href='{{battle.pk}}'"  >
-                    <td>{% if battle.is_active or battle.is_active == None %}X{% else %}O{% endif %}</td>
+                    <td>{% if battle.is_active or battle.is_active == None %}
+                        <img src="{% static "cs_battles/deactive_icon.png" %}" />
+                        {% else %}
+                        <img src="{% static "cs_battles/active_icon.png" %}" />
+                        {% endif %}</td>
                     <td>{{battle.pk}}</td>
                     <td>{{battle.question}}</td>
                     <td>{{battle.short_description}}</td>
-                    <td>{{ battle.type }}</td>
+                    <td>{{ battle.challenge_type }}</td>
                 </tr>
             {% endfor %}
             </tbody>

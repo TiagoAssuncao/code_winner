@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     # 'cs_activities',
     'cs_questions',
     #'cs_polls',
-    #'cs_battles',
+    'cs_battles',
     #'cs_pbl',
     'viewpack',
     'srvice',
