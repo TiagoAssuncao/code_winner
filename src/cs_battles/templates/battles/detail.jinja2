@@ -1,22 +1,31 @@
 {% extends "viewpack/crud/detail.jinja2" %}
+{% block nav_sections %}
+    {{super()}}
+    <nav>
+    <p><a href="/battles/">Battles</a></p>
+    <ul>
+        <li><a href="/battles/new">New</a></li>
+        <li><a href="/battles/user">My</a></li>
+        <li><a href="/battles/invitations">Invitations</a></li>
+    </ul>
+    </nav>
+{% endblock %}
 {% block object_description %}
     <h1>Resultado da Batalha</h1>
     {% if not object.is_active %}
         {% if object.battle_winner %}
             <div>
-               <h2><a href="#{{object.id}}">Winner {{ object.battle_winner.user }} </a><br>
+               <h2><a href="/accounts/{{object.battle_winner.response.user.username}}">Winner {{ object.battle_winner.response.user }} </a><br>
             </div>
         {% endif %}
         {% for battle_result in all_battles %}
-            <div id="{{battle_result.user.id}}">
-                User: {{ battle_result.user }} <br>
-                Ranking position: "number" <br>
+            <div id="{{battle_result.response.user.id}}">
+                User: {{ battle_result.response.user }} <br>
                 Time: {{ (battle_result.time_end - battle_result.time_begin)|deltaformat }} <br>
-                Characters count: {{ battle_result.source|length  }}<br>
-                <!--    Time execution code: "in seconds"<br>
-                Number of submitions: "a lot!"<br -->
-                Code winner: 
-                <br><formated>{{ battle_result.source }} <formated><br>
+                Characters count: {{ battle_result.last_item.source|length  }}<br>
+                Code winner:
+
+                <ace-editor id="editor" mode="{{object.language.ref}}">{{ battle_result.last_item.source }}</ace-editor >
             </div>
             <p>
         {% endfor %}
