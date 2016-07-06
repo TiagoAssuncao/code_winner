@@ -1,4 +1,15 @@
 {% extends "viewpack/crud/detail.jinja2" %}
+{% block nav_sections %}
+    {{super()}}
+    <nav>
+    <p><a href="/battles/">Battles</a></p>
+    <ul>
+        <li><a href="/battles/new">New</a></li>
+        <li><a href="/battles/user">My</a></li>
+        <li><a href="/battles/invitations">Invitations</a></li>
+    </ul>
+    </nav>
+{% endblock %}
 {% block object_description %}
     <h1>Resultado da Batalha</h1>
     {% if not object.is_active %}

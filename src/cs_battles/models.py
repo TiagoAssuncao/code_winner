@@ -62,7 +62,9 @@ class Battle(models.Model):
 
     @property
     def is_active(self):
-        return (len(self.invitations_user.all()) is not 0)
+        return (len(self.invitations_user.all()) is not 0
+                or True in [br.is_active for br in self.battles.all()]
+                )
 
     def __init__(self, *args, **kwargs):
         if 'language' in kwargs and isinstance(kwargs['language'], str):
