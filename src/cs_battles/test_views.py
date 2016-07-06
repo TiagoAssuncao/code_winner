@@ -97,6 +97,17 @@ def test_battle_submition_reject(client):
     assert content['status_code'] == 1
 
 @pytest.mark.django_db
+def test_battle_submition_reject(client):
+    client,user = client_logged(client)
+    battle_response = battle_response_iospec(user)
+    response = client.post('/battles/surrender/%d'%battle_response.battle.pk,
+                           {'code':''})
+    assert 200 <= response.status_code < 300
+    assert response.content == b''
+    battle_response = BattleResponse.objects.get(pk=battle_response.pk)
+    assert battle_response.give_up 
+
+@pytest.mark.django_db
 def test_battles_of_user(client):
     client,user = client_logged(client)
     battle_response_iospec(user)

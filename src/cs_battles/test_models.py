@@ -139,6 +139,12 @@ def test_battle_response_is_active():
     battle_response.battle.save()
     assert not battle_response.is_active
 
+@pytest.mark.django_db
+def test_give_up_from_battle_response():
+    battle_response = BattleResponseFactory.create()
+    assert battle_response.give_up is False
+    battle_response.give_up_battle()
+    assert battle_response.give_up
     
 @pytest.mark.django_db
 def test_battle_response_cant_submit_code():

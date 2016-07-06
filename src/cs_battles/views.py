@@ -53,6 +53,18 @@ def battle(request,battle_pk):
     else:
         return render(request, 'battles/battle.jinja2',{'battle':battle})
 
+def battle_give_up(request,battle_pk):
+    if request.method == "POST":
+        post = request.POST
+        if post:
+            # Make the submition to prevent errors
+            battle = Battle.objects.get(id=battle_pk)
+            battle_response = battle.battles \
+                              .get(response__user_id=request.user.id)
+            battle_response.submit_code(post.get("code"))
+            battle_response.give_up_battle()
+    return HttpResponse('')
+
 # Define the battles of a user
 def battle_user(request):
     user = request.user

@@ -11,8 +11,8 @@
     </nav>
 {% endblock %}
 {% block object_description %}
-    <h1>Resultado da Batalha</h1>
     {% if not object.is_active %}
+    <h1>Resultado da Batalha</h1>
         {% if object.battle_winner %}
             <div>
                <h2><a href="/accounts/{{object.battle_winner.response.user.username}}">Winner {{ object.battle_winner.response.user }} </a><br>
@@ -30,7 +30,23 @@
             <p>
         {% endfor %}
     {% else %}
-        Esta batalha ainda está ativa!
+        <h1>Esta batalha ainda está ativa!</h1>
+        {% if object.invitations_user.all()%}
+            <h3>Faltam os usuários:</h3>
+            <ul>
+                {% for i in object.invitations_user.all() %}
+                    <li>{{ i }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <h3>Possue as batalhas ativas: </h3>
+        <ul>
+            {% for i in object.battles.all() %}
+                {% if i.is_active %}
+                    <li>{{i.pk}}{{i.response.user}}</li>
+                {% endif %} 
+            {% endfor %}
+        </ul>
     {% endif %}
 {% endblock %}
 

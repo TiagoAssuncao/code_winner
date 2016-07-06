@@ -25,7 +25,8 @@ Battle
 if __name__ == "__main__":
     def hello()</ace-editor >
         <div>
-            <button id="button-submit">Submit</button>
+            <button id="button-submit">Submit</button> 
+            <button id="give-up-submit">Give up</button>
             <input id="battle_pk" type='hidden' value="{{ battle.pk }}"/>
                 {% csrf_token %}
          <!--   <form method="POST" id="form">
@@ -69,11 +70,29 @@ $(document).ready(function(){
         $('#customized_box')[0].innerHTML="<h1>"+data.messages[data.status_code]+"</h1><button onclick='"+(data.status_code == 1? 'wa()':'ac_limit()')+"'>Ok</button>";
     }
     });
+    $("#give-up-submit").click(function(){
+        var csrftoken = $("input[name=csrfmiddlewaretoken]")[0].value;
+        var battle_pk = $("#battle_pk")[0].value
+        $.ajax({
+            url:"/battles/surrender/"+battle_pk,
+            data: {code: $("#editor")[0].getValue()},
+            headers: { "X-CSRFToken": csrftoken },
+            type: 'POST',
+            beforeSend: function(e){
+                    $('#code').hide();
+                    $('#customized_box').show()
+                    $('#customized_box')[0].innerHTML="<h2>Enviando...</h2>";
+                },
+            success: surrender,
+            error: function(e){alert('Sorry, an error occurred');},
+        });
 
-    
+    function surrender(data){
+        console.log(data);
+        $('#customized_box')[0].innerHTML="<h1>Obrigado pela participação</h1><button onclick='location.href=\"/battles\"'>Ok</button>";
+    }
+    });
         
- //       $("#code")[0].setAttribute('value', $("#editor")[0].getValue());
- //       $("#form")[0].submit();
 });
 function wa(){
     $('#code').show();

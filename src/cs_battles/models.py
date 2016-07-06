@@ -79,7 +79,8 @@ class Battle(models.Model):
 
     def winner_length(self):
         def source_length(battle):
-            if battle.last_item.source is not None:
+            if (battle.last_item.source is not None
+                 and battle.last_item.given_grade == 100):
                 return len(battle.last_item.source)
             else:
                 return -1
@@ -92,7 +93,6 @@ class Battle(models.Model):
 
     def __str__(self):
             return "Battle (%s): %s" % (self.id,self.short_description)
-
 
 
 class BattleResponse(models.Model):
@@ -117,7 +117,9 @@ class BattleResponse(models.Model):
         blank=True,
         null=True
     )
-    
+
+    give_up = models.BooleanField(default=False)
+
     @property
     def submitions_count(self):
         return len(self.response.items.all())
@@ -129,11 +131,16 @@ class BattleResponse(models.Model):
     @property
     def is_active(self):
         if self.last_item is not None:
-            return self.can_submit and self.last_item.given_grade is not 100
+            return (self.can_submit and self.last_item.given_grade != 100
+                    and not self.give_up)
         else:
-            return self.can_submit
+            return self.can_submit and not self.give_up
 
-    def submit_code(self,source_code):
+    def give_up_battle(self):
+        self.give_up = True
+        self.save()
+
+    def submit_code(self,source_code,give_up=False):
         if self.can_submit:
             response_item = self.battle.question.register_response_item(
                 user=self.response.user,
@@ -142,6 +149,7 @@ class BattleResponse(models.Model):
                 context=self.battle.battle_context,
                 )
             response_item.autograde()
+            self.give_up = give_up
             self.update(response_item)
             return response_item
         else:
