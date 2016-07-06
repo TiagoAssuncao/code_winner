@@ -3,6 +3,7 @@ from cs_battles.factories import BattleResponseFactory
 from cs_battles.models import *
 from cs_battles.test_models import battle_fixture,battle_without_winner
 from cs_questions.factories import CodingIoQuestionFactory
+import json
 
 @pytest.fixture
 def many_battles():
@@ -59,10 +60,12 @@ def test_invitations_user(client):
 @pytest.mark.django_db
 def test_redirect_battle_response_get(client):
     client,user= client_logged(client)
+    battle_fixture()
     response = client.get('/battles/battle/1')
     assert 200 <= response.status_code < 300
     assert response.templates[0].name == 'battles/battle.jinja2'
-    assert len(response.context) == 0
+    assert 'battle' in response.context
+    assert len(response.context) == 1
 
 @pytest.mark.django_db
 def test_battle_submition_accept(client):
@@ -72,9 +75,12 @@ def test_battle_submition_accept(client):
                     '/battles/battle/%d'%battle_response.battle.pk,
                     {'code':"print('Oi')"}
                     )
+    print(response)
     assert 200 <= response.status_code < 300
-    assert 'message' in response.context
-    assert 'Sua questão está certa' == response.context['message']
+    assert response.get('Content-Type') == 'application/json'
+    assert response.content is not None
+    content = json.loads(response.content.decode('unicode_escape'))
+    assert content['status_code'] == 0
 
 @pytest.mark.django_db
 def test_battle_submition_reject(client):
@@ -85,8 +91,10 @@ def test_battle_submition_reject(client):
                     {'code':"print('O')"}
                     )
     assert 200 <= response.status_code < 300
-    assert 'message' in response.context
-    assert 'Está errada' == response.context['message']
+    assert response.get('Content-Type') == 'application/json'
+    assert response.content is not None
+    content = json.loads(response.content.decode('unicode_escape'))
+    assert content['status_code'] == 1
 
 @pytest.mark.django_db
 def test_battles_of_user(client):
@@ -107,7 +115,6 @@ def test_redirect_accept_challange(client):
     response = client.post(
                 "/battles/accept",
                 {'battle_pk':1,'accept':True})
-
     assert 300 <= response.status_code < 400
     assert response.url == "/battles/battle/1"
 

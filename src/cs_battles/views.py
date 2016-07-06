@@ -9,36 +9,49 @@ from .models import BattleResponse, Battle
 from datetime import datetime
 from viewpack import CRUDViewPack
 from django.views.generic.edit import ModelFormMixin
-
+import json
 #from .forms import  BattleForm
 
 MAXIMUM_POINT = 100
-
+AC = 0
+WA = 1
+LIMIT = 2
+MESSAGES = {
+                AC: "Sua questão está certa",
+                WA: "Está errada",
+                LIMIT: "Atingiu limite de submissões",
+            }
 def battle(request,battle_pk):
+    battle = Battle.objects.get(id=battle_pk)
     if request.method == "POST":
-        message = ""
+        status_code = 0
+        given_grade = 0.0
         post = request.POST
         if post:
             # Obtain attributes from post
             battle_code = post.get("code")
-            battle = Battle.objects.get(id=battle_pk)
             try:
                 battle_response = battle.battles \
                                 .get(response__user_id=request.user.id)
                 response_item = battle_response.submit_code(battle_code)
+                given_grade = response_item.given_grade
                 battle_is_correct = (response_item.given_grade == MAXIMUM_POINT)
                 if battle_is_correct:
-                    message = "Sua questão está certa"
+                    status_code = AC
                 else:
-                    message = "Está errada"
+                    status_code = WA
+                    MESSAGES[WA]="Está errada: %.2f%%"%float(given_grade)
             except Exception as e:
-                message = e.args[0]
+                print(e)
+                status_code = LIMIT
         context = {
-            'message':message,
+            'status_code':status_code,
+            'messages':MESSAGES
         }
-        return render(request, 'battles/result.jinja2', context)
+        return HttpResponse(json.dumps(context),content_type="application/json")
+#        return render(request, 'battles/result.jinja2', context)
     else:
-        return render(request, 'battles/battle.jinja2',{'source_code':""})
+        return render(request, 'battles/battle.jinja2',{'battle':battle})
 
 # Define the battles of a user
 def battle_user(request):

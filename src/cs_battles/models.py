@@ -127,7 +127,7 @@ class BattleResponse(models.Model):
     @property
     def is_active(self):
         if self.last_item is not None:
-            return self.can_submit or self.last_item.given_grade == 100
+            return self.can_submit and self.last_item.given_grade is not 100
         else:
             return self.can_submit
 
